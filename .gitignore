@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System & OS files
+.DS_Store
+Thumbs.db
+
+# Archives & Large data zip files
+*.zip
+data_copy.zip
+
+# Auto-generated analytics cache files
+data\ copy/batch_course_analytics.json
+data\ copy/course_analytics.json
+
+# Raw Student Data Folder (Uncomment line below if you don't want 52,000 JSON files tracked in git)
+# data\ copy/

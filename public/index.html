@@ -1,0 +1,1721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade & Subject Analytics Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a0a0f;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #6366f1;
+            --primary-hover: #8b5cf6;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            
+            /* Grade Colors */
+            --grade-S: #fbbf24;
+            --grade-A: #10b981;
+            --grade-B: #14b8a6;
+            --grade-C: #0ea5e9;
+            --grade-D: #f59e0b;
+            --grade-E: #f97316;
+            --grade-F: #ef4444;
+            --grade-N: #64748b;
+
+            /* Risk Colors */
+            --risk-extreme: #ef4444;
+            --risk-high: #f97316;
+            --risk-moderate: #f59e0b;
+            --risk-low: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Subtle Background Gradient Mesh */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08), transparent 25%),
+                        radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Top Navigation Bar */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            background: rgba(10, 10, 15, 0.7);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--card-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            font-weight: 800;
+            font-size: 1.25rem;
+            background: linear-gradient(to right, #6366f1, #8b5cf6, #d946ef);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 0.25rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--card-border);
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.5rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .nav-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .nav-btn:hover:not(.active) {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* View Management */
+        .view {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        .view.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Search View */
+        .hero {
+            text-align: center;
+            margin-top: 6vh;
+            margin-bottom: 3rem;
+        }
+
+        .hero h1 {
+            font-size: 3.2rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #6366f1, #8b5cf6, #d946ef);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.02em;
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .search-container {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1.2rem 1.5rem 1.2rem 3.5rem;
+            border-radius: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: white;
+            font-size: 1.1rem;
+            font-family: 'Inter', sans-serif;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1.2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            width: 20px;
+            height: 20px;
+        }
+
+        .results-container {
+            margin-top: 2rem;
+            display: grid;
+            gap: 1rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .result-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 0.75rem;
+            padding: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .result-card:hover, .result-card.selected {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .result-info h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+        }
+
+        .result-info p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-family: monospace;
+        }
+
+        .result-badge {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            padding: 0.3rem 0.6rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        /* Student Detail View */
+        .back-btn {
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            transition: all 0.2s ease;
+        }
+
+        .back-btn:hover {
+            background: var(--card-bg);
+            border-color: var(--text-muted);
+        }
+
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .profile-title h2 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-badges {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-reg {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--card-border);
+            font-family: monospace;
+        }
+
+        .badge-branch {
+            background: rgba(139, 92, 246, 0.15);
+            color: #c084fc;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Batch Tab Bar CSS */
+        .batch-tab-bar {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 0.8rem 1.2rem;
+            border-radius: 0.85rem;
+            border: 1px solid var(--card-border);
+        }
+
+        .batch-tab-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .batch-pill-group {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+        }
+
+        .batch-pill {
+            padding: 0.45rem 0.9rem;
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .batch-pill.active {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border-color: #8b5cf6;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .batch-pill:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .cgpa-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .cgpa-dial {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin-bottom: 1rem;
+        }
+
+        .cgpa-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.2rem;
+            font-weight: 800;
+        }
+
+        .credits-bar-container {
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .credits-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
+        }
+
+        .progress-bg {
+            background: rgba(255, 255, 255, 0.05);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(to right, var(--primary), var(--primary-hover));
+            height: 100%;
+            width: 0%;
+            transition: width 1s ease;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            padding: 1rem;
+            border-radius: 0.75rem;
+        }
+
+        .stat-box .number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .stat-box .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+        }
+
+        .grade-distribution {
+            margin-top: 1rem;
+        }
+
+        .grade-bar {
+            display: flex;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.05);
+            margin-bottom: 0.75rem;
+        }
+
+        .grade-segment {
+            height: 100%;
+            transition: width 0.8s ease;
+        }
+
+        .grade-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        /* History Table */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            color: var(--text-main);
+        }
+
+        th.sort-asc::after { content: " ▲"; font-size: 0.7rem; }
+        th.sort-desc::after { content: " ▼"; font-size: 0.7rem; }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .semester-header td {
+            background: rgba(255, 255, 255, 0.04);
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 0.95rem;
+            border-top: 1px solid var(--card-border);
+        }
+
+        .grade-badge {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            border-radius: 0.4rem;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-align: center;
+            min-width: 32px;
+        }
+
+        .grade-color-S { background: rgba(251, 191, 36, 0.15); color: var(--grade-S); border: 1px solid rgba(251, 191, 36, 0.3); }
+        .grade-color-A { background: rgba(16, 185, 129, 0.15); color: var(--grade-A); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .grade-color-B { background: rgba(20, 184, 166, 0.15); color: var(--grade-B); border: 1px solid rgba(20, 184, 166, 0.3); }
+        .grade-color-C { background: rgba(14, 165, 233, 0.15); color: var(--grade-C); border: 1px solid rgba(14, 165, 233, 0.3); }
+        .grade-color-D { background: rgba(245, 158, 11, 0.15); color: var(--grade-D); border: 1px solid rgba(245, 158, 11, 0.3); }
+        .grade-color-E { background: rgba(249, 115, 22, 0.15); color: var(--grade-E); border: 1px solid rgba(249, 115, 22, 0.3); }
+        .grade-color-F { background: rgba(239, 68, 68, 0.2); color: var(--grade-F); border: 1px solid rgba(239, 68, 68, 0.4); }
+        .grade-color-N { background: rgba(100, 116, 139, 0.2); color: var(--grade-N); border: 1px solid rgba(100, 116, 139, 0.4); }
+        .grade-color-default { background: rgba(255, 255, 255, 0.1); color: white; }
+
+        .type-badge {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.3rem;
+        }
+
+        .code-link {
+            color: #a5b4fc;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .code-link:hover {
+            color: var(--primary-hover);
+            text-decoration: underline;
+        }
+
+        .risk-mini-badge {
+            font-size: 0.7rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 0.3rem;
+            font-weight: 700;
+            display: inline-block;
+            margin-left: 0.4rem;
+        }
+
+        /* Subject Analytics View Styles */
+        .analytics-header {
+            margin-bottom: 2rem;
+        }
+
+        .analytics-header h2 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #6366f1, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .analytics-header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+            max-width: 700px;
+            line-height: 1.5;
+        }
+
+        .analytics-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 1rem;
+            padding: 1.25rem;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary);
+        }
+
+        .summary-card.extreme::before { background: var(--risk-extreme); }
+        .summary-card.high::before { background: var(--risk-high); }
+        .summary-card.moderate::before { background: var(--risk-moderate); }
+        .summary-card.low::before { background: var(--risk-low); }
+
+        .summary-val {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.2rem;
+        }
+
+        .summary-lbl {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .filter-toolbar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-search {
+            flex: 1;
+            min-width: 260px;
+            position: relative;
+        }
+
+        .filter-search input {
+            width: 100%;
+            padding: 0.8rem 1rem 0.8rem 2.8rem;
+            border-radius: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: white;
+            font-size: 0.95rem;
+        }
+
+        .filter-search input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .filter-select {
+            padding: 0.8rem 1rem;
+            border-radius: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: white;
+            font-size: 0.9rem;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .filter-select option {
+            background: #12131c;
+            color: white;
+        }
+
+        .risk-pill-group {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+        }
+
+        .risk-pill {
+            padding: 0.5rem 0.9rem;
+            border-radius: 0.6rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .risk-pill.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .risk-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.6rem;
+            border-radius: 0.4rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .risk-badge.extreme { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4); }
+        .risk-badge.high { background: rgba(249, 115, 22, 0.2); color: #fdba74; border: 1px solid rgba(249, 115, 22, 0.4); }
+        .risk-badge.moderate { background: rgba(245, 158, 11, 0.2); color: #fde047; border: 1px solid rgba(245, 158, 11, 0.4); }
+        .risk-badge.low { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); }
+
+        .fail-rate-bar-container {
+            width: 120px;
+            background: rgba(255, 255, 255, 0.05);
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 0.3rem;
+        }
+
+        .fail-rate-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 200;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: #11121d;
+            border: 1px solid var(--card-border);
+            border-radius: 1.25rem;
+            max-width: 650px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 2rem;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.open .modal-card {
+            transform: scale(1);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            background: rgba(255, 255, 255, 0.06);
+            border: none;
+            color: var(--text-muted);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        /* Loading Skeleton & Helpers */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .loader {
+            display: none;
+            margin: 2rem auto;
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-brand" onclick="showSearchView()">
+            <span>🎓</span> Grade Analytics
+        </div>
+        <div class="nav-links">
+            <button class="nav-btn active" id="nav-search-btn" onclick="showSearchView()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                Student Lookup
+            </button>
+            <button class="nav-btn" id="nav-analytics-btn" onclick="showAnalyticsView()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                Subject Fail-Rate Analytics
+            </button>
+        </div>
+    </nav>
+
+    <div class="container">
+        
+        <!-- Search View -->
+        <div id="search-view" class="view active">
+            <div class="hero">
+                <h1>Student Grade Lookup</h1>
+                <p>Search over 50,000+ student records by Name or Registration Number</p>
+            </div>
+
+            <div class="search-container">
+                <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <input type="text" id="search-input" class="search-input" placeholder="Enter student name or registration number..." autocomplete="off">
+            </div>
+
+            <div id="loader" class="loader"></div>
+            <div id="results-container" class="results-container"></div>
+        </div>
+
+        <!-- Student Detail View -->
+        <div id="detail-view" class="view">
+            <button class="back-btn" onclick="showSearchView()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                Back to Search
+            </button>
+
+            <div class="profile-header">
+                <div class="profile-title">
+                    <h2 id="student-name">Student Name</h2>
+                    <div class="profile-badges">
+                        <span id="reg-badge" class="badge badge-reg">REG_NUMBER</span>
+                        <span id="batch-badge" class="badge badge-branch">BRANCH</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <!-- CGPA Dial Card -->
+                <div class="card cgpa-container">
+                    <div class="cgpa-dial" id="cgpa-svg-container"></div>
+                    <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-muted);">Overall CGPA</div>
+
+                    <div class="credits-bar-container">
+                        <div class="credits-labels">
+                            <span>Earned: <strong id="credits-earned">0</strong></span>
+                            <span>Registered: <strong id="credits-reg">0</strong></span>
+                        </div>
+                        <div class="progress-bg">
+                            <div id="credits-progress" class="progress-fill"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Academic Stats & Grade Breakdown Card -->
+                <div class="card">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Performance Summary</h3>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div id="total-courses" class="number">0</div>
+                            <div class="label">Total Courses</div>
+                        </div>
+                        <div class="stat-box">
+                            <div id="top-grades" class="number">0</div>
+                            <div class="label">S & A Grades</div>
+                        </div>
+                    </div>
+
+                    <h4 style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem;">Grade Distribution</h4>
+                    <div class="grade-distribution">
+                        <div class="grade-bar" id="grade-bar"></div>
+                        <div class="grade-legend" id="grade-legend"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Course History Table Card -->
+            <div class="card" id="history-card">
+                <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem;">Course Grade History</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Click any Course Code to view subject first-timer failure probabilities and difficulty analytics.</p>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th data-sort="CourseCode">Course Code</th>
+                                <th data-sort="CourseTitle">Course Title</th>
+                                <th data-sort="CourseType">Type</th>
+                                <th data-sort="Credits">Credits</th>
+                                <th data-sort="Grade">Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody id="courses-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subject Analytics View -->
+        <div id="analytics-view" class="view">
+            <div class="analytics-header">
+                <h2>Subject Fail-Rate & Difficulty Analytics</h2>
+                <p>Analyzing 1,600,000+ course enrolments across 37,000+ students. Discover exact first-timer failure probabilities (F & N grades) and average GPAs by batch.</p>
+            </div>
+
+            <!-- Batch Selection Tabs -->
+            <div class="batch-tab-bar">
+                <span class="batch-tab-label">Filter Batch:</span>
+                <div class="batch-pill-group">
+                    <button class="batch-pill active" onclick="setBatchFilter('all')">🌟 All Batches</button>
+                    <button class="batch-pill" onclick="setBatchFilter('25')">25 Batch</button>
+                    <button class="batch-pill" onclick="setBatchFilter('24')">24 Batch</button>
+                    <button class="batch-pill" onclick="setBatchFilter('23')">23 Batch</button>
+                    <button class="batch-pill" onclick="setBatchFilter('22')">22 Batch</button>
+                    <button class="batch-pill" onclick="setBatchFilter('21')">21 Batch</button>
+                    <button class="batch-pill" onclick="setBatchFilter('20')">20 Batch</button>
+                    <button class="batch-pill" onclick="setBatchFilter('older')">Older (10-19)</button>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="analytics-summary-grid">
+                <div class="summary-card">
+                    <div class="summary-val" id="sum-total-courses">0</div>
+                    <div class="summary-lbl">Subjects Analyzed</div>
+                </div>
+                <div class="summary-card extreme">
+                    <div class="summary-val" id="sum-extreme-count" style="color: var(--risk-extreme)">0</div>
+                    <div class="summary-lbl">Extreme Risk (≥20% Fail Rate)</div>
+                </div>
+                <div class="summary-card high">
+                    <div class="summary-val" id="sum-high-count" style="color: var(--risk-high)">0</div>
+                    <div class="summary-lbl">High Risk (10–20% Fail Rate)</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-val" id="sum-avg-fail">0%</div>
+                    <div class="summary-lbl">Avg First-Timer Fail Rate</div>
+                </div>
+            </div>
+
+            <!-- Filters & Controls Toolbar -->
+            <div class="filter-toolbar">
+                <div class="filter-search">
+                    <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <input type="text" id="analytics-search-input" placeholder="Search subject code or title (e.g. Calculus, CSE1001)...">
+                </div>
+
+                <select id="analytics-sort-select" class="filter-select">
+                    <option value="failRateDesc">Highest Fail Rate %</option>
+                    <option value="failRateAsc">Lowest Fail Rate %</option>
+                    <option value="gpaAsc">Lowest Average GPA</option>
+                    <option value="gpaDesc">Highest Average GPA</option>
+                    <option value="enrolmentsDesc">Most First-Timer Enrolments</option>
+                </select>
+
+                <div class="risk-pill-group">
+                    <button class="risk-pill active" onclick="setRiskFilter('all')">All</button>
+                    <button class="risk-pill" onclick="setRiskFilter('Extreme Risk')">Extreme Risk</button>
+                    <button class="risk-pill" onclick="setRiskFilter('High Risk')">High Risk</button>
+                    <button class="risk-pill" onclick="setRiskFilter('Moderate Risk')">Moderate Risk</button>
+                    <button class="risk-pill" onclick="setRiskFilter('Low Risk')">Low Risk</button>
+                </div>
+            </div>
+
+            <!-- Subject Analytics Table / Cards -->
+            <div class="card">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>First-Timer Enrolments</th>
+                                <th>F/N Fail Rate %</th>
+                                <th>Avg First-Timer GPA</th>
+                                <th>Difficulty Risk</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="analytics-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Detailed Subject Analytics Modal -->
+    <div class="modal-overlay" id="analytics-modal">
+        <div class="modal-card">
+            <button class="modal-close" onclick="closeAnalyticsModal()">&times;</button>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let currentResults = [];
+        let selectedIndex = -1;
+        let searchTimeout = null;
+        let currentStudentData = null;
+        let currentSort = { column: null, asc: true };
+
+        // Analytics State
+        let activeRiskFilter = 'all';
+        let analyticsSearchTimeout = null;
+
+        const gradeColors = {
+            'S': '#fbbf24',
+            'A': '#10b981',
+            'B': '#14b8a6',
+            'C': '#0ea5e9',
+            'D': '#f59e0b',
+            'E': '#f97316',
+            'F': '#ef4444',
+            'N': '#64748b'
+        };
+
+        // DOM Elements
+        const searchView = document.getElementById('search-view');
+        const detailView = document.getElementById('detail-view');
+        const analyticsView = document.getElementById('analytics-view');
+
+        const navSearchBtn = document.getElementById('nav-search-btn');
+        const navAnalyticsBtn = document.getElementById('nav-analytics-btn');
+
+        const searchInput = document.getElementById('search-input');
+        const resultsContainer = document.getElementById('results-container');
+        const loader = document.getElementById('loader');
+
+        const analyticsSearchInput = document.getElementById('analytics-search-input');
+        const analyticsSortSelect = document.getElementById('analytics-sort-select');
+
+        // Event Listeners
+        searchInput.addEventListener('input', handleSearchInput);
+        searchInput.addEventListener('keydown', handleSearchKeydown);
+
+        analyticsSearchInput.addEventListener('input', () => {
+            if (analyticsSearchTimeout) clearTimeout(analyticsSearchTimeout);
+            analyticsSearchTimeout = setTimeout(fetchCourseAnalytics, 300);
+        });
+
+        analyticsSortSelect.addEventListener('change', fetchCourseAnalytics);
+
+        // Debounced Search for Students
+        function handleSearchInput(e) {
+            const query = e.target.value.trim();
+            if (searchTimeout) clearTimeout(searchTimeout);
+            
+            if (query.length < 2) {
+                resultsContainer.innerHTML = '';
+                currentResults = [];
+                selectedIndex = -1;
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                performSearch(query);
+            }, 300);
+        }
+
+        async function performSearch(query) {
+            loader.style.display = 'block';
+            resultsContainer.innerHTML = '';
+            
+            try {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                currentResults = data;
+                selectedIndex = -1;
+                renderResults();
+            } catch (error) {
+                console.error("Search failed:", error);
+                resultsContainer.innerHTML = '<div class="empty-state">Failed to fetch results.</div>';
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        function renderResults() {
+            if (currentResults.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin: 0 auto 1rem; color: var(--text-muted); opacity: 0.5;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p>No students found matching your search.</p>
+                    </div>`;
+                return;
+            }
+
+            resultsContainer.innerHTML = currentResults.map((result, index) => {
+                const parts = result.filePath.split('/');
+                let badgeInfo = '';
+                if (parts.length >= 2) {
+                    badgeInfo = `<div class="result-badge">${parts[0]} ${parts[1]}</div>`;
+                }
+
+                return `
+                    <div class="result-card" data-index="${index}" onclick="loadStudent('${result.filePath}')">
+                        <div class="result-info">
+                            <h3>${result.name}</h3>
+                            <p>${result.regNumber}</p>
+                        </div>
+                        ${badgeInfo}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function handleSearchKeydown(e) {
+            if (currentResults.length === 0) return;
+            const cards = resultsContainer.querySelectorAll('.result-card');
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedIndex = Math.min(selectedIndex + 1, currentResults.length - 1);
+                updateSelection(cards);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedIndex = Math.max(selectedIndex - 1, 0);
+                updateSelection(cards);
+            } else if (e.key === 'Enter' && selectedIndex >= 0) {
+                e.preventDefault();
+                loadStudent(currentResults[selectedIndex].filePath);
+            }
+        }
+
+        function updateSelection(cards) {
+            cards.forEach((card, idx) => {
+                if (idx === selectedIndex) {
+                    card.classList.add('selected');
+                    card.scrollIntoView({ block: 'nearest' });
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
+        }
+
+        // View Navigation
+        function updateNavState(activeView) {
+            navSearchBtn.classList.toggle('active', activeView === 'search' || activeView === 'detail');
+            navAnalyticsBtn.classList.toggle('active', activeView === 'analytics');
+        }
+
+        function showSearchView() {
+            updateNavState('search');
+            detailView.classList.remove('active');
+            analyticsView.classList.remove('active');
+            setTimeout(() => {
+                detailView.style.display = 'none';
+                analyticsView.style.display = 'none';
+                searchView.style.display = 'block';
+                void searchView.offsetWidth;
+                searchView.classList.add('active');
+                searchInput.focus();
+            }, 200);
+        }
+
+        function showDetailView() {
+            updateNavState('detail');
+            searchView.classList.remove('active');
+            analyticsView.classList.remove('active');
+            setTimeout(() => {
+                searchView.style.display = 'none';
+                analyticsView.style.display = 'none';
+                detailView.style.display = 'block';
+                void detailView.offsetWidth;
+                detailView.classList.add('active');
+            }, 200);
+        }
+
+        function showAnalyticsView() {
+            updateNavState('analytics');
+            searchView.classList.remove('active');
+            detailView.classList.remove('active');
+            setTimeout(() => {
+                searchView.style.display = 'none';
+                detailView.style.display = 'none';
+                analyticsView.style.display = 'block';
+                void analyticsView.offsetWidth;
+                analyticsView.classList.add('active');
+                fetchCourseAnalytics();
+            }, 200);
+        }
+
+        // Student Data Loading & Rendering
+        async function loadStudent(filePath) {
+            try {
+                const response = await fetch(`/api/student/${encodeURIComponent(filePath)}`);
+                if (!response.ok) throw new Error("Failed to load");
+                const data = await response.json();
+                
+                const pathParts = filePath.split('/');
+                if (pathParts.length >= 2) {
+                    data._batch = pathParts[0];
+                    data._branch = pathParts[1];
+                }
+                
+                renderStudentDetails(data);
+                showDetailView();
+            } catch (error) {
+                console.error("Error loading student:", error);
+                alert("Failed to load student details.");
+            }
+        }
+
+        function renderStudentDetails(data) {
+            currentStudentData = data;
+            
+            const info = data.student_information || {};
+            const tables = data.tables || {};
+            const cgpaDetails = (tables.cgpa_details && tables.cgpa_details[0]) ? tables.cgpa_details[0] : null;
+            const history = tables.grade_history_combined || [];
+
+            document.getElementById('student-name').textContent = info.name || 'Unknown Student';
+            document.getElementById('reg-badge').textContent = info.register_number || 'N/A';
+            
+            const batchBadge = document.getElementById('batch-badge');
+            if (data._batch && data._branch) {
+                batchBadge.textContent = `${data._batch} ${data._branch}`;
+                batchBadge.style.display = 'block';
+            } else {
+                batchBadge.style.display = 'none';
+            }
+
+            renderCgpaCard(cgpaDetails);
+
+            if (history.length > 0) {
+                document.getElementById('history-card').classList.remove('hidden');
+                
+                const monthMap = { "Jan":0,"Feb":1,"Mar":2,"Apr":3,"May":4,"Jun":5,"Jul":6,"Aug":7,"Sep":8,"Oct":9,"Nov":10,"Dec":11 };
+                history.forEach(h => {
+                    const parts = h.ExamMonth ? h.ExamMonth.split('-') : [];
+                    h._monthVal = 0;
+                    if (parts.length === 2) {
+                        const m = monthMap[parts[0]] || 0;
+                        const y = parseInt(parts[1]) || 0;
+                        h._monthVal = y * 12 + m;
+                    }
+                });
+
+                renderStats(cgpaDetails, history);
+                renderTable(history);
+            } else {
+                document.getElementById('history-card').classList.add('hidden');
+                renderStats(cgpaDetails, []);
+            }
+        }
+
+        function renderCgpaCard(cgpaDetails) {
+            const svgContainer = document.getElementById('cgpa-svg-container');
+            const earnedEl = document.getElementById('credits-earned');
+            const regEl = document.getElementById('credits-reg');
+            const progEl = document.getElementById('credits-progress');
+
+            if (!cgpaDetails) {
+                svgContainer.innerHTML = `<div class="cgpa-value">N/A</div>`;
+                earnedEl.textContent = '0';
+                regEl.textContent = '0';
+                progEl.style.width = '0%';
+                return;
+            }
+
+            const cgpa = parseFloat(cgpaDetails.Cgpa) || 0;
+            const earned = parseFloat(cgpaDetails.CreditsEarned) || 0;
+            const reg = parseFloat(cgpaDetails.CreditsRegistered) || 0;
+
+            const radius = 65;
+            const circumference = 2 * Math.PI * radius;
+            const dashoffset = circumference - (cgpa / 10) * circumference;
+
+            svgContainer.innerHTML = `
+                <svg width="150" height="150" viewBox="0 0 150 150">
+                    <circle cx="75" cy="75" r="${radius}" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="12"></circle>
+                    <circle cx="75" cy="75" r="${radius}" fill="none" stroke="url(#cgpa-gradient)" stroke-width="12" 
+                            stroke-linecap="round" stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}"
+                            style="transition: stroke-dashoffset 1.5s ease-out; transform: rotate(-90deg); transform-origin: 50% 50%;">
+                    </circle>
+                    <defs>
+                        <linearGradient id="cgpa-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#6366f1" />
+                            <stop offset="100%" stop-color="#d946ef" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="cgpa-value">${cgpa.toFixed(2)}</div>
+            `;
+
+            setTimeout(() => {
+                const circle = svgContainer.querySelector('circle:nth-child(2)');
+                if (circle) circle.style.strokeDashoffset = dashoffset;
+            }, 50);
+
+            earnedEl.textContent = earned;
+            regEl.textContent = reg;
+            const percent = reg > 0 ? (earned / reg) * 100 : 0;
+            setTimeout(() => {
+                progEl.style.width = `${Math.min(percent, 100)}%`;
+            }, 50);
+        }
+
+        function renderStats(cgpaDetails, history) {
+            document.getElementById('total-courses').textContent = history.length;
+            
+            const grades = ['S', 'A', 'B', 'C', 'D', 'E', 'F', 'N'];
+            let totalTop = 0;
+            let totalGraded = 0;
+            const counts = {};
+            
+            if (cgpaDetails) {
+                grades.forEach(g => {
+                    const count = parseInt(cgpaDetails[`${g}Grades`]) || 0;
+                    counts[g] = count;
+                    totalGraded += count;
+                    if (g === 'S' || g === 'A') totalTop += count;
+                });
+            } else {
+                history.forEach(h => {
+                    const g = h.Grade;
+                    if (grades.includes(g)) {
+                        counts[g] = (counts[g] || 0) + 1;
+                        totalGraded++;
+                        if (g === 'S' || g === 'A') totalTop++;
+                    }
+                });
+            }
+            
+            document.getElementById('top-grades').textContent = totalTop;
+
+            const barEl = document.getElementById('grade-bar');
+            const legendEl = document.getElementById('grade-legend');
+            barEl.innerHTML = '';
+            legendEl.innerHTML = '';
+
+            if (totalGraded > 0) {
+                grades.forEach(g => {
+                    const count = counts[g] || 0;
+                    if (count > 0) {
+                        const percent = (count / totalGraded) * 100;
+                        const color = gradeColors[g];
+                        
+                        const segment = document.createElement('div');
+                        segment.className = 'grade-segment';
+                        segment.style.backgroundColor = color;
+                        segment.style.width = '0%';
+                        segment.title = `${g}: ${count}`;
+                        barEl.appendChild(segment);
+                        
+                        setTimeout(() => { segment.style.width = `${percent}%`; }, 100);
+                        
+                        legendEl.innerHTML += `
+                            <div class="legend-item">
+                                <div class="legend-dot" style="background-color: ${color}"></div>
+                                <span>${g}: ${count}</span>
+                            </div>
+                        `;
+                    }
+                });
+            } else {
+                barEl.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem">No grade data available</div>';
+            }
+        }
+
+        // Table Sorting Setup
+        document.querySelectorAll('th[data-sort]').forEach(th => {
+            th.addEventListener('click', () => {
+                const column = th.dataset.sort;
+                if (currentSort.column === column) {
+                    currentSort.asc = !currentSort.asc;
+                } else {
+                    currentSort.column = column;
+                    currentSort.asc = true;
+                }
+                
+                document.querySelectorAll('th[data-sort]').forEach(el => {
+                    el.classList.remove('sort-asc', 'sort-desc');
+                });
+                th.classList.add(currentSort.asc ? 'sort-asc' : 'sort-desc');
+                
+                renderTable(currentStudentData.tables.grade_history_combined);
+            });
+        });
+
+        function renderTable(history) {
+            const tbody = document.getElementById('courses-body');
+            tbody.innerHTML = '';
+            
+            if (!history || history.length === 0) return;
+
+            let dataToRender = [...history];
+
+            if (currentSort.column) {
+                dataToRender.sort((a, b) => {
+                    let valA = a[currentSort.column] || '';
+                    let valB = b[currentSort.column] || '';
+                    
+                    if (currentSort.column === 'Credits') {
+                        valA = parseFloat(valA) || 0;
+                        valB = parseFloat(valB) || 0;
+                    }
+                    
+                    if (valA < valB) return currentSort.asc ? -1 : 1;
+                    if (valA > valB) return currentSort.asc ? 1 : -1;
+                    return 0;
+                });
+            } else {
+                dataToRender.sort((a, b) => b._monthVal - a._monthVal);
+                let currentMonth = null;
+                dataToRender.forEach(row => {
+                    if (row.ExamMonth !== currentMonth) {
+                        currentMonth = row.ExamMonth;
+                        const tr = document.createElement('tr');
+                        tr.className = 'semester-header';
+                        tr.innerHTML = `<td colspan="5">${currentMonth || 'Unknown Semester'}</td>`;
+                        tbody.appendChild(tr);
+                    }
+                    tbody.appendChild(createRow(row));
+                });
+                return;
+            }
+
+            dataToRender.forEach(row => {
+                tbody.appendChild(createRow(row));
+            });
+        }
+
+        function createRow(row) {
+            const tr = document.createElement('tr');
+            const gradeClass = gradeColors[row.Grade] ? `grade-color-${row.Grade}` : 'grade-color-default';
+            
+            let riskBadge = '';
+            if (row._analytics) {
+                const r = row._analytics.riskLevel;
+                let riskClass = 'low';
+                if (r === 'Extreme Risk') riskClass = 'extreme';
+                else if (r === 'High Risk') riskClass = 'high';
+                else if (r === 'Moderate Risk') riskClass = 'moderate';
+                
+                if (r !== 'Low Risk') {
+                    riskBadge = `<span class="risk-mini-badge risk-badge ${riskClass}" title="First-timer F/N rate: ${row._analytics.firstTimerFailRate}%">${row._analytics.firstTimerFailRate}% F/N</span>`;
+                }
+            }
+
+            tr.innerHTML = `
+                <td>
+                    <span class="code-link" onclick="openCourseAnalyticsModal('${row.CourseCode}')">
+                        ${row.CourseCode || '-'} 📊
+                    </span>
+                    ${riskBadge}
+                </td>
+                <td style="font-weight: 500">${row.CourseTitle || '-'}</td>
+                <td><span class="type-badge">${row.CourseType || '-'}</span></td>
+                <td>${row.Credits || '-'}</td>
+                <td><span class="grade-badge ${gradeClass}">${row.Grade || '-'}</span></td>
+            `;
+            return tr;
+        }
+
+        // ─── Subject Analytics View Logic ──────────────────────────────
+        let activeBatchFilter = 'all';
+
+        function setBatchFilter(batch) {
+            activeBatchFilter = batch;
+            document.querySelectorAll('.batch-pill').forEach(btn => {
+                const text = btn.textContent;
+                if ((batch === 'all' && text.includes('All')) ||
+                    (batch === 'older' && text.includes('Older')) ||
+                    text.includes(batch + ' Batch')) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            fetchCourseAnalytics();
+        }
+
+        function setRiskFilter(risk) {
+            activeRiskFilter = risk;
+            document.querySelectorAll('.risk-pill').forEach(btn => {
+                const text = btn.textContent.trim();
+                if ((risk === 'all' && text === 'All') || text === risk) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            fetchCourseAnalytics();
+        }
+
+        async function fetchCourseAnalytics() {
+            const query = analyticsSearchInput.value.trim();
+            const sort = analyticsSortSelect.value;
+
+            const url = `/api/course-analytics?batch=${encodeURIComponent(activeBatchFilter)}&q=${encodeURIComponent(query)}&risk=${encodeURIComponent(activeRiskFilter)}&sort=${encodeURIComponent(sort)}&limit=100`;
+
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                renderCourseAnalytics(data);
+            } catch (err) {
+                console.error("Failed to load course analytics:", err);
+            }
+        }
+
+        function renderCourseAnalytics(data) {
+            const summary = data.summary || {};
+            document.getElementById('sum-total-courses').textContent = summary.totalCourses ? summary.totalCourses.toLocaleString() : '0';
+            document.getElementById('sum-extreme-count').textContent = summary.extremeRiskCount ? summary.extremeRiskCount.toLocaleString() : '0';
+            document.getElementById('sum-high-count').textContent = summary.highRiskCount ? summary.highRiskCount.toLocaleString() : '0';
+            document.getElementById('sum-avg-fail').textContent = `${summary.overallFailRate || 0}%`;
+
+            const tbody = document.getElementById('analytics-table-body');
+            tbody.innerHTML = '';
+
+            if (!data.courses || data.courses.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No subjects match the selected filters.</td></tr>`;
+                return;
+            }
+
+            data.courses.forEach(course => {
+                const tr = document.createElement('tr');
+                
+                let riskClass = 'low';
+                if (course.riskLevel === 'Extreme Risk') riskClass = 'extreme';
+                else if (course.riskLevel === 'High Risk') riskClass = 'high';
+                else if (course.riskLevel === 'Moderate Risk') riskClass = 'moderate';
+
+                const barColor = course.riskLevel === 'Extreme Risk' ? 'var(--risk-extreme)' :
+                                 course.riskLevel === 'High Risk' ? 'var(--risk-high)' :
+                                 course.riskLevel === 'Moderate Risk' ? 'var(--risk-moderate)' : 'var(--risk-low)';
+
+                tr.innerHTML = `
+                    <td>
+                        <div style="font-weight: 700; color: #a5b4fc; font-family: monospace; font-size: 0.95rem;">${course.code}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-main); font-weight: 500;">${course.title}</div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 600;">${course.firstTimerCount.toLocaleString()}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">First-timers</div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 700; color: ${barColor}">${course.firstTimerFailRate}%</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">${course.firstTimerFailCount} failed</div>
+                        <div class="fail-rate-bar-container">
+                            <div class="fail-rate-bar-fill" style="width: ${Math.min(course.firstTimerFailRate, 100)}%; background-color: ${barColor}"></div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 700;">${course.avgGpa.toFixed(2)}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">/ 10.0</div>
+                    </td>
+                    <td>
+                        <span class="risk-badge ${riskClass}">${course.riskLevel}</span>
+                    </td>
+                    <td>
+                        <button class="nav-btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: rgba(99, 102, 241, 0.15); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3)" onclick="openCourseAnalyticsModal('${course.code}')">
+                            Details
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Modal Logic
+        async function openCourseAnalyticsModal(code) {
+            const modal = document.getElementById('analytics-modal');
+            const content = document.getElementById('modal-content');
+
+            content.innerHTML = `<div class="loader" style="display:block;"></div>`;
+            modal.classList.add('open');
+
+            try {
+                const res = await fetch(`/api/course-analytics/${encodeURIComponent(code)}?batch=${encodeURIComponent(activeBatchFilter)}`);
+                if (!res.ok) throw new Error("Not found");
+                const course = await res.json();
+                renderModalContent(course);
+            } catch (err) {
+                content.innerHTML = `<div class="empty-state">Analytics not found for ${code}.</div>`;
+            }
+        }
+
+        function closeAnalyticsModal() {
+            document.getElementById('analytics-modal').classList.remove('open');
+        }
+
+        function renderModalContent(course) {
+            const content = document.getElementById('modal-content');
+            const grades = course.firstTimerGrades || {};
+            const total = course.firstTimerCount || 1;
+
+            let riskClass = 'low';
+            if (course.riskLevel === 'Extreme Risk') riskClass = 'extreme';
+            else if (course.riskLevel === 'High Risk') riskClass = 'high';
+            else if (course.riskLevel === 'Moderate Risk') riskClass = 'moderate';
+
+            const gradeOrder = ['S', 'A', 'B', 'C', 'D', 'E', 'F', 'N'];
+            
+            const gradeRowsHtml = gradeOrder.map(g => {
+                const count = grades[g] || 0;
+                const pct = ((count / total) * 100).toFixed(1);
+                const color = gradeColors[g];
+
+                return `
+                    <div style="display: flex; align-items: center; gap: 0.8rem; font-size: 0.85rem; margin-bottom: 0.5rem;">
+                        <span class="grade-badge grade-color-${g}" style="width: 30px">${g}</span>
+                        <div style="flex: 1; background: rgba(255,255,255,0.05); height: 8px; border-radius: 4px; overflow: hidden;">
+                            <div style="width: ${pct}%; background-color: ${color}; height: 100%; border-radius: 4px;"></div>
+                        </div>
+                        <span style="font-weight: 600; width: 50px; text-align: right;">${pct}%</span>
+                        <span style="color: var(--text-muted); width: 60px; text-align: right;">(${count})</span>
+                    </div>
+                `;
+            }).join('');
+
+            content.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; padding-right: 2rem;">
+                    <div>
+                        <div style="font-family: monospace; color: #a5b4fc; font-weight: 700; font-size: 1.1rem;">${course.code}</div>
+                        <h2 style="font-size: 1.5rem; font-weight: 800; margin-top: 0.2rem;">${course.title}</h2>
+                        <span class="type-badge" style="margin-top: 0.4rem; display: inline-block;">${course.type}</span>
+                    </div>
+                    <span class="risk-badge ${riskClass}" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">${course.riskLevel}</span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); padding: 1rem; border-radius: 0.75rem; text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: 800; color: ${course.firstTimerFailRate >= 10 ? 'var(--risk-extreme)' : 'var(--text-main)'}">${course.firstTimerFailRate}%</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">First-Timer F/N Fail Probability</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); padding: 1rem; border-radius: 0.75rem; text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: 800;">${course.avgGpa.toFixed(2)}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Avg First-Timer GPA (/10)</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); padding: 1rem; border-radius: 0.75rem; text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: 800;">${course.firstTimerCount.toLocaleString()}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Total First-Timer Students</div>
+                    </div>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--card-border); border-radius: 0.75rem; padding: 1.25rem;">
+                    <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-main);">First-Timer Grade Breakdown</h4>
+                    ${gradeRowsHtml}
+                </div>
+            `;
+        }
+
+        // Close modal on click outside
+        document.getElementById('analytics-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'analytics-modal') closeAnalyticsModal();
+        });
+    </script>
+</body>
+</html>
