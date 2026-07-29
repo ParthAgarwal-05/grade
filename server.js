@@ -6,7 +6,7 @@ const crypto = require('crypto');
 
 const app = express();
 const PORT = parseInt(process.env.PORT) || 8080;
-const HOST = '127.0.0.1'; // Localhost only — no network access
+const HOST = '0.0.0.0'; // Listen on all interfaces for network-wide access
 const DATA_DIR = path.join(__dirname, 'data copy');
 
 // ─── Authentication Config ─────────────────────────────────
