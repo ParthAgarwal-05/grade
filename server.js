@@ -5,7 +5,7 @@ const os = require('os');
 const crypto = require('crypto');
 
 const app = express();
-const PORT = 3000;
+const PORT = parseInt(process.env.PORT) || 8080;
 const HOST = '127.0.0.1'; // Localhost only — no network access
 const DATA_DIR = path.join(__dirname, 'data copy');
 
@@ -213,21 +213,33 @@ function getLocalIP() {
 }
 // ─────────────────────────────────────────────────────────────
 
-app.listen(PORT, HOST, () => {
-    const localIP = getLocalIP();
-    console.log('');
-    console.log('┌──────────────────────────────────────────────┐');
-    console.log('│          🎓 Grade Lookup Server              │');
-    console.log('├──────────────────────────────────────────────┤');
-    console.log(`│  Local:   http://localhost:${PORT}              │`);
-    console.log(`│  Network: http://${localIP}:${PORT}          │`);
-    console.log('├──────────────────────────────────────────────┤');
-    console.log(`│  Username: ${AUTH_USERNAME}                          │`);
-    console.log(`│  Password: ${AUTH_PASSWORD}                     │`);
-    console.log('├──────────────────────────────────────────────┤');
-    console.log('│  🔒 Password protected                      │');
-    console.log('│  🛡️  Rate limited (10 attempts / 5 min)      │');
-    console.log('│  🌐 Accessible from any device on LAN       │');
-    console.log('└──────────────────────────────────────────────┘');
-    console.log('');
-});
+function startServer(port) {
+    const server = app.listen(port, HOST, () => {
+        const localIP = getLocalIP();
+        console.log('');
+        console.log('┌──────────────────────────────────────────────┐');
+        console.log('│          🎓 Grade Lookup Server              │');
+        console.log('├──────────────────────────────────────────────┤');
+        console.log(`│  Local:   http://localhost:${port}              │`);
+        console.log(`│  Network: http://${localIP}:${port}          │`);
+        console.log('├──────────────────────────────────────────────┤');
+        console.log(`│  Username: ${AUTH_USERNAME}                          │`);
+        console.log(`│  Password: ${AUTH_PASSWORD}                     │`);
+        console.log('├──────────────────────────────────────────────┤');
+        console.log('│  🔒 Password protected                      │');
+        console.log('│  🛡️  Rate limited (10 attempts / 5 min)      │');
+        console.log('└──────────────────────────────────────────────┘');
+        console.log('');
+    });
+
+    server.on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+            console.warn(`⚠ Port ${port} is in use. Retrying on port ${port + 1}...`);
+            startServer(port + 1);
+        } else {
+            console.error('Server error:', err);
+        }
+    });
+}
+
+startServer(PORT);
